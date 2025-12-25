@@ -1,3 +1,7 @@
+// 该合约代码由全网最强一键发币平台PandaTool免费分享，官网：https://pandatool.org/
+
+// 该合约名为：314协议，实现一种转账即交易的代币模型，具有交易冷却防夹功能，具体教程：https://help.pandatool.org/createtoken/314
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
