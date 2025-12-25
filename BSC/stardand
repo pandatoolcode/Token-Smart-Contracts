@@ -1,3 +1,7 @@
+// 该合约代码由全网最强一键发币平台PandaTool免费分享，官网：https://pandatool.org/
+
+// 该合约名为：标准代币，是纯粹的、干净的、没有任何功能/权限的ERC20/BEP20代币，具体教程：https://help.pandatool.org/createtoken/stardand
+
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.24;
