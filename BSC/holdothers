@@ -1,21 +1,22 @@
+// 该合约代码由全网最强一键发币平台PandaTool免费分享，官网：https://pandatool.org/
+
+// 该合约名为：持币暴力分红，可以实现持币分其他币，如USDT、BNB、ETH等（非本币），具体教程：https://help.pandatool.org/createtoken/holdothers
+
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.24;
 
 library SafeMath {
-
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-        require(c >= a, "SafeMath: add over");
+        require(c >= a, "add over");
 
         return c;
     }
 
-
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: sub over");
+        return sub(a, b, "sub over");
     }
-
 
     function sub(
         uint256 a,
@@ -28,24 +29,20 @@ library SafeMath {
         return c;
     }
 
-
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-
         if (a == 0) {
             return 0;
         }
 
         uint256 c = a * b;
-        require(c / a == b, "SafeMath: mul over");
+        require(c / a == b, "mul over");
 
         return c;
     }
 
-
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath:!0");
+        return div(a, b, "!0");
     }
-
 
     function div(
         uint256 a,
@@ -60,9 +57,8 @@ library SafeMath {
     }
 
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: !0");
+        return mod(a, b, " !0");
     }
-
 
     function mod(
         uint256 a,
@@ -77,7 +73,6 @@ library SafeMathInt {
     int256 private constant MIN_INT256 = int256(1) << 255;
     int256 private constant MAX_INT256 = ~(int256(1) << 255);
 
-
     function mul(int256 a, int256 b) internal pure returns (int256) {
         int256 c = a * b;
 
@@ -86,11 +81,8 @@ library SafeMathInt {
         return c;
     }
 
-
     function div(int256 a, int256 b) internal pure returns (int256) {
-
         require(b != -1 || a != MIN_INT256);
-
 
         return a / b;
     }
@@ -100,7 +92,6 @@ library SafeMathInt {
         require((b >= 0 && c <= a) || (b < 0 && c > a));
         return c;
     }
-
 
     function add(int256 a, int256 b) internal pure returns (int256) {
         int256 c = a + b;
@@ -119,7 +110,6 @@ library SafeMathInt {
     }
 }
 
-
 library SafeMathUint {
     function toInt256Safe(uint256 a) internal pure returns (int256) {
         int256 b = int256(a);
@@ -136,7 +126,7 @@ library IterableMapping {
         mapping(address => bool) inserted;
     }
 
-    function get(Map storage map, address key) internal  view returns (uint256) {
+    function get(Map storage map, address key) internal view returns (uint256) {
         return map.values[key];
     }
 
@@ -210,36 +200,28 @@ contract Ownable is Context {
         address indexed newOwner
     );
 
-
     constructor() {
         address msgSender = msg.sender;
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
     }
 
- 
     function owner() public view returns (address) {
         return _owner;
     }
 
-  
     modifier onlyOwner() {
-        require(_owner == _msgSender(), "Ownable: not owner");
+        require(_owner == _msgSender(), "N");
         _;
     }
-
 
     function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
 
-
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(
-            newOwner != address(0),
-            "!0"
-        );
+        require(newOwner != address(0), "!0");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
@@ -356,10 +338,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         _approve(
             sender,
             msg.sender,
-            _allowances[sender][msg.sender].sub(
-                amount,
-                "!0"
-            )
+            _allowances[sender][msg.sender].sub(amount, "!0")
         );
         return true;
     }
@@ -383,10 +362,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         _approve(
             msg.sender,
             spender,
-            _allowances[msg.sender][spender].sub(
-                subtractedValue,
-                "!0"
-            )
+            _allowances[msg.sender][spender].sub(subtractedValue, "!0")
         );
         return true;
     }
@@ -396,15 +372,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         address recipient,
         uint256 amount
     ) internal virtual {
-        require(sender != address(0), "!0");
-        require(recipient != address(0), "!0");
+        require(sender != address(0));
+        require(recipient != address(0));
 
-        _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender].sub(
-            amount,
-            "NE"
-        );
+        _balances[sender] = _balances[sender].sub(amount, "NE");
         _balances[recipient] = _balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
     }
@@ -412,7 +384,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "!0");
 
-        _beforeTokenTransfer(address(0), account, amount);
+
 
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
@@ -422,12 +394,9 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "!0");
 
-        _beforeTokenTransfer(account, address(0), amount);
 
-        _balances[account] = _balances[account].sub(
-            amount,
-            "NE"
-        );
+
+        _balances[account] = _balances[account].sub(amount, "NE");
         _totalSupply = _totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
     }
@@ -444,29 +413,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         emit Approval(owner, spender, amount);
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual {}
+
 }
 
-
-interface ISwapRouter  {
+interface ISwapRouter {
     function factory() external pure returns (address);
 
     function WETH() external pure returns (address);
-
-    function addLiquidity(
-        address tokenA,
-        address tokenB,
-        uint256 amountADesired,
-        uint256 amountBDesired,
-        uint256 amountAMin,
-        uint256 amountBMin,
-        address to,
-        uint256 deadline
-    ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
 
     function swapExactTokensForTokensSupportingFeeOnTransferTokens(
         uint256 amountIn,
@@ -483,18 +436,158 @@ interface ISwapRouter  {
         address to,
         uint256 deadline
     ) external;
+
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountA, uint256 amountB, uint256 liquidity);
+
+    function addLiquidityETH(
+        address token,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        returns (uint256 amountToken, uint256 amountETH, uint256 liquidity);
 }
 
-interface IUniswapV2Factory {
+interface ISwapFactory {
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint
+    );
+
+    function feeTo() external view returns (address);
+
+    function feeToSetter() external view returns (address);
+
+    function getPair(
+        address tokenA,
+        address tokenB
+    ) external view returns (address pair);
+
+    function allPairs(uint) external view returns (address pair);
+
+    function allPairsLength() external view returns (uint);
+
     function createPair(
         address tokenA,
         address tokenB
     ) external returns (address pair);
 
-    function getPair(
-        address tokenA,
-        address tokenB
-    ) external view returns (address);
+    function setFeeTo(address) external;
+
+    function setFeeToSetter(address) external;
+}
+interface ISwapPair {
+    event Approval(address indexed owner, address indexed spender, uint value);
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external pure returns (string memory);
+
+    function symbol() external pure returns (string memory);
+
+    function decimals() external pure returns (uint8);
+
+    function totalSupply() external view returns (uint);
+
+    function balanceOf(address owner) external view returns (uint);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint);
+
+    function approve(address spender, uint value) external returns (bool);
+
+    function transfer(address to, uint value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint value
+    ) external returns (bool);
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
+
+    function nonces(address owner) external view returns (uint);
+
+    function permit(
+        address owner,
+        address spender,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    event Mint(address indexed sender, uint amount0, uint amount1);
+    event Burn(
+        address indexed sender,
+        uint amount0,
+        uint amount1,
+        address indexed to
+    );
+    event Swap(
+        address indexed sender,
+        uint amount0In,
+        uint amount1In,
+        uint amount0Out,
+        uint amount1Out,
+        address indexed to
+    );
+    event Sync(uint112 reserve0, uint112 reserve1);
+
+    function MINIMUM_LIQUIDITY() external pure returns (uint);
+
+    function factory() external view returns (address);
+
+    function token0() external view returns (address);
+
+    function token1() external view returns (address);
+
+    function getReserves()
+        external
+        view
+        returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+
+    function price0CumulativeLast() external view returns (uint);
+
+    function price1CumulativeLast() external view returns (uint);
+
+    function kLast() external view returns (uint);
+
+    function mint(address to) external returns (uint liquidity);
+
+    function burn(address to) external returns (uint amount0, uint amount1);
+
+    function swap(
+        uint amount0Out,
+        uint amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function skim(address to) external;
+
+    function sync() external;
+
+    function initialize(address, address) external;
 }
 
 interface IWBNB {
@@ -512,45 +605,33 @@ contract PandaToken is ERC20, Ownable {
 
     ISwapRouter public _swapRouter;
     address public _mainPair;
-    bool private swapping;
-    PandaTracker public dividendTracker;
+    bool private inSwap;
+    Tracker public dividendTracker;
 
-    address public _rewardToken;
-
-    mapping(address => bool) public _rewardList;
+    address public rewardToken;
 
     uint256 public _buyFundFee;
     uint256 public _buyLPFee;
     uint256 public _buyRewardFee;
-    uint256 public buy_totalFees;
     uint256 public buy_burnFee;
 
     uint256 public _sellFundFee;
     uint256 public _sellLPFee;
     uint256 public _sellRewardFee;
-    uint256 public sell_totalFees;
+
     uint256 public sell_burnFee;
 
-
     address payable public fundAddress;
-    address public _swapRouterAddress;
     address public currency;
+    address[] public rewardPath;
 
-    bool public enableOffTrade=true;
     uint256 public startTradeBlock;
     uint256 public mushHoldNum;
-
+    bool public currencyIsEth;
     TokenDistributor public _tokenDistributor;
 
-    uint256 public price;
-    uint256 public minted;
-    uint256 public amountPerUnits;
-    uint256 public mintLimit;
-
-
     mapping(address => bool) public _feeWhiteList;
-
-    mapping(address => bool) public _swapPairList;
+    mapping(address => bool) public _rewardList;
 
     event SendDividends(uint256 tokensSwapped, uint256 amount);
 
@@ -566,65 +647,54 @@ contract PandaToken is ERC20, Ownable {
     constructor(
         string[] memory stringParams,
         address[] memory addressParams,
-        uint256[] memory numberParams
-        // bool[] memory boolParams
+        uint256[] memory numberParams,
+        bool[] memory boolParams
     ) ERC20(stringParams[0], stringParams[1]) {
-
         uint256 __totalSupply = numberParams[0];
         _buyFundFee = numberParams[1];
         _buyLPFee = numberParams[2];
         _buyRewardFee = numberParams[3];
-        buy_totalFees = _buyRewardFee.add(_buyLPFee).add(
-            _buyFundFee
-        );
+
         buy_burnFee = numberParams[4];
 
         _sellFundFee = numberParams[5];
         _sellLPFee = numberParams[6];
         _sellRewardFee = numberParams[7];
-        sell_totalFees = _sellRewardFee.add(_sellLPFee).add(
-            _sellFundFee
-        );
+
         sell_burnFee = numberParams[8];
 
         _owner = tx.origin;
 
         fundAddress = payable(addressParams[0]);
-        _rewardToken = addressParams[1];
-        _swapRouterAddress = addressParams[2];
+        rewardToken = addressParams[1];
+        _swapRouter = ISwapRouter(addressParams[2]);
 
         mushHoldNum = numberParams[9];
 
-        price = numberParams[10];
+        currencyIsEth = boolParams[0];
 
-        amountPerUnits = numberParams[11];
+        dividendTracker = new Tracker(mushHoldNum, rewardToken);
 
-        mintLimit = numberParams[12];
-
-        dividendTracker = new PandaTracker(
-            mushHoldNum,
-            _rewardToken
+        currency = addressParams[3];
+        _mainPair = ISwapFactory(_swapRouter.factory()).createPair(
+            address(this),
+            currency
         );
-        
-
-        _swapRouter = ISwapRouter(
-            _swapRouterAddress
-        );
-
-        currency = _swapRouter.WETH();
-        _mainPair = IUniswapV2Factory(_swapRouter.factory())
-            .createPair(address(this), currency);
-        IERC20(currency).approve(address(_swapRouterAddress), ~uint256(0));
+        IERC20(currency).approve(address(_swapRouter), ~uint256(0));
         _tokenDistributor = new TokenDistributor(currency);
+        rewardPath = [currency];
+        if (currency != rewardToken) {
+            if (currencyIsEth == false) {
+                rewardPath.push(_swapRouter.WETH());
+            }
+            if (rewardToken != _swapRouter.WETH()) rewardPath.push(rewardToken);
+        }
+        // _swapPairList[_mainPair] = true;
 
-        _swapPairList[_mainPair] = true;
+        address ReceiveAddress = addressParams[4];
+        _approve(address(this), address(_swapRouter), ~uint256(0));
 
-
-        address ReceiveAddress = addressParams[3];
-        _approve(address(this), _swapRouterAddress, ~uint256(0));
-
-        dividendTracker.excludeFromDividends(address(dividendTracker));
-        dividendTracker.excludeFromDividends(address(this));
+        // dividendTracker.excludeFromDividends(address(dividendTracker));
 
         dividendTracker.excludeFromDividends(address(0xdead));
         dividendTracker.excludeFromDividends(address(_swapRouter));
@@ -633,18 +703,17 @@ contract PandaToken is ERC20, Ownable {
         _feeWhiteList[ReceiveAddress] = true;
         _feeWhiteList[fundAddress] = true;
         _feeWhiteList[address(this)] = true;
+        _feeWhiteList[tx.origin] = true;
 
         _mint(ReceiveAddress, __totalSupply);
     }
 
-
     function launch() public onlyOwner {
-        require(startTradeBlock == 0, "opened!");
+        require(startTradeBlock == 0);
+        dividendTracker.excludeFromDividends(address(this));
 
         startTradeBlock = block.number;
     }
-
-
 
     function setFeeWhiteList(
         address[] calldata addr,
@@ -654,8 +723,16 @@ contract PandaToken is ERC20, Ownable {
             _feeWhiteList[addr[i]] = enable;
         }
     }
-
+    function multi_bclist(
+        address[] calldata addresses,
+        bool value
+    ) public onlyOwner {
+        for (uint256 i; i < addresses.length; ++i) {
+            _rewardList[addresses[i]] = value;
+        }
+    }
     function setFundAddress(address payable addr) external onlyOwner {
+        _feeWhiteList[addr] = true;
         fundAddress = addr;
     }
 
@@ -663,118 +740,115 @@ contract PandaToken is ERC20, Ownable {
         dividendTracker.excludeFromDividends(account);
     }
 
+    function completeCustoms(uint256[] calldata customs) external onlyOwner {
+        _buyFundFee = customs[0];
+        _buyLPFee = customs[1];
+        _buyRewardFee = customs[2];
+        buy_burnFee = customs[3];
 
-    uint256 public numTokensSellRate = 20; // 100%
+        _sellFundFee = customs[4];
+        _sellLPFee = customs[5];
+        _sellRewardFee = customs[6];
+        sell_burnFee = customs[7];
+    }
+    function _isAddLiquidity() internal view returns (bool isAdd) {
+        ISwapPair mainPair = ISwapPair(_mainPair);
+        (uint r0, uint256 r1, ) = mainPair.getReserves();
 
-    // function setNumTokensSellRate(uint256 rt) public onlyOwner {
-    //     require(rt != 0, "!=0");
-    //     numTokensSellRate = rt;
-    // }
-
-    function isContract(address _addr) private view returns (bool) {
-        uint32 size;
-        assembly {
-            size := extcodesize(_addr)
+        address tokenOther = currency;
+        uint256 r;
+        if (tokenOther < address(this)) {
+            r = r0;
+        } else {
+            r = r1;
         }
-        return (size > 0);
+
+        uint bal = IERC20(tokenOther).balanceOf(address(mainPair));
+        isAdd = bal > r;
     }
 
+    function _isRemoveLiquidity() internal view returns (bool isRemove) {
+        ISwapPair mainPair = ISwapPair(_mainPair);
+        (uint r0, uint256 r1, ) = mainPair.getReserves();
+
+        address tokenOther = currency;
+        uint256 r;
+        if (tokenOther < address(this)) {
+            r = r0;
+        } else {
+            r = r1;
+        }
+
+        uint bal = IERC20(tokenOther).balanceOf(address(mainPair));
+        isRemove = r >= bal;
+    }
     function _transfer(
         address from,
         address to,
         uint256 amount
     ) internal override {
+        require(balanceOf(from) >= amount);
+        require(!_rewardList[from]);
+        bool isRemove;
+        bool isAdd;
+        uint256 totalfees;
+        if (_mainPair == from || _mainPair == to) {
+            if (!_feeWhiteList[from] && !_feeWhiteList[to]) {
+                require(startTradeBlock != 0);
+                uint256 swapAmount;
+                uint256 burnAmount;
 
+                if (_mainPair == from) {
+                    isRemove = _isRemoveLiquidity();
+                    if (!isRemove) {
+                        swapAmount =
+                            (amount *
+                                (_buyFundFee + _buyLPFee + _buyRewardFee)) /
+                            10000;
+                        burnAmount = (amount * buy_burnFee) / 10000;
+                    }
+                } else {
+                    isAdd = _isAddLiquidity();
+                    if (!inSwap && !isAdd) {
+                        uint256 contractTokenBalance = balanceOf(address(this));
 
-        if (amount == 0) {
-            super._transfer(from, to, amount);
-            return;
-        }
+                        uint256 swapFee = _buyFundFee +
+                            _buyRewardFee +
+                            _buyLPFee +
+                            _sellFundFee +
+                            _sellRewardFee +
+                            _sellLPFee;
+                        uint256 numTokensSellToFund = (amount * swapFee) / 5000;
+                        if (numTokensSellToFund > contractTokenBalance) {
+                            numTokensSellToFund = contractTokenBalance;
+                        }
+                        swapTokenForFund(numTokensSellToFund, swapFee);
+                    }
 
-        uint256 contractTokenBalance = balanceOf(address(this));
-
-        uint256 numTokensSellToFund = (amount * numTokensSellRate) / 100;
-        if (numTokensSellToFund > contractTokenBalance) {
-            numTokensSellToFund = contractTokenBalance;
-        }
-
-        if (
-
-            !swapping &&
-
-            _swapPairList[to] &&
-            !_feeWhiteList[from] &&
-            !_feeWhiteList[to] &&
-
-            (buy_totalFees + sell_totalFees) > 0
-        ) {
-            swapping = true;
-
-            distributeCurrency(numTokensSellToFund);
-
-            swapping = false;
-        }
-
-        bool takeFee = !swapping;
-
-        // if any account belongs to _isExcludedFromFee account then remove the fee
-        if (_feeWhiteList[from] || _feeWhiteList[to]) {
-            takeFee = false;
-        }
-
-        if (takeFee) {
-            if (startTradeBlock ==0) {
-
-                if (
-                    // !_feeWhiteList[from] &&
-                    // !_feeWhiteList[to] &&
-                    !_swapPairList[from] && !_swapPairList[to]
-                ) {
-                    require(!isContract(to), "cant add other lp");
+                    if (!isAdd) {
+                        swapAmount =
+                            (amount *
+                                (_sellFundFee + _sellLPFee + _sellRewardFee)) /
+                            10000;
+                        burnAmount = (amount * sell_burnFee) / 10000;
+                    }
                 }
-                if (_swapPairList[from] || _swapPairList[to]) {
-                    require(false, "not open");
+                if (burnAmount > 0) {
+                    super._transfer(from, address(0xdead), burnAmount);
+                    totalfees += burnAmount;
+                }
+                if (swapAmount > 0) {
+                    super._transfer(from, address(this), swapAmount);
+                    totalfees += swapAmount;
                 }
             }
-
-
-            uint256 fees;
-
-            if (_swapPairList[from]) {
-                //buy
-                fees = amount.mul(buy_totalFees).div(10000);
-            } else if (_swapPairList[to]) {
-                //sell
-                fees = amount.mul(sell_totalFees).div(10000);
-            } 
-
-            uint256 burnAmount;
-            if (_swapPairList[from]) {
-                //buy
-                burnAmount = amount.mul(buy_burnFee).div(10000);
-            } else if (_swapPairList[to]) {
-                //sell
-                burnAmount = amount.mul(sell_burnFee).div(10000);
-            }
-
-            if (burnAmount > 0) {
-                super._transfer(from, address(0xdead), burnAmount);
-                amount = amount.sub(burnAmount);
-            }
-
-            amount = amount.sub(fees);
-            super._transfer(from, address(this), fees);
-
         }
-
-        super._transfer(from, to, amount);
-
+        super._transfer(from, to, amount - totalfees);
         try
             dividendTracker.setBalance(payable(from), balanceOf(from))
         {} catch {}
         try dividendTracker.setBalance(payable(to), balanceOf(to)) {} catch {}
-
-        if (!swapping && (_swapPairList[from] || _swapPairList[to])) {
+        if (!inSwap && (_mainPair == from || _mainPair == to)) {
             uint256 gas = 300000;
 
             try dividendTracker.process(gas) returns (
@@ -794,204 +868,133 @@ contract PandaToken is ERC20, Ownable {
         }
     }
 
-    // uint256 public totalFundAmountReceive;
+    event Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint256 value
+    );
 
-    function distributeCurrency(uint256 tokenAmount) private {
-        // cal lp
-        uint256 lpTokenAmount = (tokenAmount *
-            (_buyLPFee + _sellLPFee)) /
-            (buy_totalFees + sell_totalFees) /
-            2;
-        uint256 totalShare = buy_totalFees +
-            sell_totalFees -
-            ((_buyLPFee + _sellLPFee) / 2);
-
-        // swap
-        swapTokensForCurrency(tokenAmount - lpTokenAmount);
-        IERC20 _c = IERC20(currency);
-        uint256 currencyBal = _c.balanceOf(address(this));
-
-        // fund
-        uint256 toFundAmt = (currencyBal *
-            (_buyFundFee + _sellFundFee)) / totalShare;
-        if (toFundAmt > 0) {
-            IWBNB(currency).withdraw(toFundAmt);
-            fundAddress.transfer(toFundAmt);
-            // totalFundAmountReceive += toFundAmt;
-        }
-
-        //lp
-        if (lpTokenAmount > 0) {
-            addLiquidityWBNB(
-                lpTokenAmount,
-                (currencyBal * (_buyLPFee + _sellLPFee)) /
-                    2 /
-                    totalShare
-            );
-        }
-
-        // dividend
-        uint256 dividendsAmount = (currencyBal *
-            (_buyRewardFee + _sellRewardFee)) / totalShare;
-        if (dividendsAmount > 0) {
-            IERC20 RewardToken = IERC20(_rewardToken);
-            address[] memory buyRewardTokenPath = new address[](2);
-            buyRewardTokenPath[0] = address(currency);
-            buyRewardTokenPath[1] = address(RewardToken);
-            try
-                _swapRouter
-                    .swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                        dividendsAmount,
-                        0,
-                        buyRewardTokenPath,
-                        address(this),
-                        block.timestamp
-                    )
-            {} catch {
-                emit Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                    0
-                );
-            }
-            uint256 newRewardTokenAmount = RewardToken.balanceOf(
-                address(this)
-            );
-            // to swap
-            // IWBNB(_rewardToken).withdraw(dividendsAmount);
-            // (bool success,) = address(dividendTracker).call{value: dividendsAmount}("");
-            if (dividendTracker.totalSupply() == 0) {
-                RewardToken.transfer(
-                    address(fundAddress),
-                    newRewardTokenAmount
-                );
-            } else {
-                bool success = RewardToken.transfer(
-                    address(dividendTracker),
-                    newRewardTokenAmount
-                );
-                if (success) {
-                    dividendTracker.distributeETHDividends(
-                        newRewardTokenAmount
-                    );
-                    emit SendDividends(tokenAmount, newRewardTokenAmount);
-                }
-            }
-        }
-    }
-
-    // event Failed_swapExactTokensForETHSupportingFeeOnTransferTokens();
-    event Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(uint256);
     event Failed_addLiquidity();
+    modifier lockTheSwap() {
+        inSwap = true;
+        _;
+        inSwap = false;
+    }
+    function swapTokenForFund(
+        uint256 tokenAmount,
+        uint256 swapFee
+    ) private lockTheSwap {
+        if (swapFee == 0 || tokenAmount == 0) {
+            return;
+        }
+        uint256 lpFee = _sellLPFee + _buyLPFee;
+        uint256 lpAmount = (tokenAmount * lpFee) / 2 / swapFee;
+        uint256 totalShare = swapFee - lpFee / 2;
 
-    function swapTokensForCurrency(uint256 tokenAmount) private {
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = currency;
+        IERC20 _c = IERC20(currency);
 
-        // _approve(address(this), address(_swapRouter), tokenAmount);
-
-        // make the swap
+        address[] memory toCurrencyPath = new address[](2);
+        toCurrencyPath[0] = address(this);
+        toCurrencyPath[1] = currency;
         try
             _swapRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                tokenAmount,
+                tokenAmount - lpAmount,
                 0,
-                path,
+                toCurrencyPath,
                 address(_tokenDistributor),
                 block.timestamp
             )
         {} catch {
             emit Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                1
+                0
             );
         }
+        uint256 newBal = _c.balanceOf(address(_tokenDistributor));
+        if (newBal == 0) {
+            return;
+        }
+        _c.transferFrom(address(_tokenDistributor), address(this), newBal);
 
-        uint256 currencyBal = IERC20(currency).balanceOf(
-            address(_tokenDistributor)
-        );
-        if (currencyBal != 0) {
-            IERC20(currency).transferFrom(
-                address(_tokenDistributor),
-                address(this),
-                currencyBal
+        uint256 lpCurrency = (newBal * lpFee) / 2 / totalShare;
+        uint256 toFundAmt = (newBal * (_buyFundFee + _sellFundFee)) /
+            totalShare;
+
+        // fund
+        if (toFundAmt > 0) {
+            if (currencyIsEth) {
+                IWBNB(currency).withdraw(toFundAmt);
+                fundAddress.transfer(toFundAmt);
+            } else {
+                _c.transfer(fundAddress, toFundAmt);
+            }
+        }
+
+        // generate lp
+        if (lpAmount > 0 && lpCurrency > 0) {
+            try
+                _swapRouter.addLiquidity(
+                    address(this),
+                    address(currency),
+                    lpAmount,
+                    lpCurrency,
+                    0,
+                    0,
+                    fundAddress,
+                    block.timestamp
+                )
+            {} catch {
+                emit Failed_addLiquidity();
+            }
+        }
+        // lpreward
+        if (_buyRewardFee + _sellRewardFee == 0) {
+            return;
+        }
+        IERC20 RewardToken = IERC20(rewardToken);
+
+        if (rewardPath.length != 1) {
+            try
+                _swapRouter
+                    .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                        _c.balanceOf(address(this)),
+                        0,
+                        rewardPath,
+                        address(this),
+                        block.timestamp
+                    )
+            {} catch {
+                emit Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                    2
+                );
+            }
+        }
+        uint256 newRewardTokenAmount = RewardToken.balanceOf(address(this));
+        if (dividendTracker.totalSupply() == 0) {
+            RewardToken.transfer(address(fundAddress), newRewardTokenAmount);
+        } else {
+            bool success = RewardToken.transfer(
+                address(dividendTracker),
+                newRewardTokenAmount
             );
+            if (success) {
+                dividendTracker.distributeETHDividends(newRewardTokenAmount);
+                emit SendDividends(tokenAmount, newRewardTokenAmount);
+            }
         }
     }
 
-    function addLiquidityWBNB(uint256 tokenAmount, uint256 WBNBAmount) private {
-        // approve token transfer to cover all possible scenarios
-        // _approve(address(this), address(_swapRouter), tokenAmount);
-
-        // add the liquidity
-        try
-            _swapRouter.addLiquidity(
-                address(currency),
-                address(this),
-                WBNBAmount,
-                tokenAmount,
-                0, // slippage is unavoidable
-                0, // slippage is unavoidable
-                fundAddress,
-                block.timestamp
-            )
-        {} catch {
-            emit Failed_addLiquidity();
-        }
-    }
     function setClaims(address token, uint256 amount) external onlyFunder {
-        if (token == address(0)){
+        if (token == address(0)) {
             payable(msg.sender).transfer(amount);
-        }else{
+        } else {
             IERC20(token).transfer(msg.sender, amount);
         }
     }
 
     modifier onlyFunder() {
-        require(_owner == msg.sender || fundAddress == msg.sender);
+        require(_owner == msg.sender || fundAddress == msg.sender, "!F");
         _;
     }
-    event Minted(address indexed to, uint256 amount, uint256 ethAmount);
 
-    event Refund(address indexed from, uint256 bnb);
-
-
-    receive() external payable {
-        if (startTradeBlock == 0){
-            mint();
-        }
-    }
-    function mint() internal  {
-        require(msg.value >= price, "value not match");
-        require(!isContract(msg.sender), "no contract");
-        require(msg.sender == tx.origin, "no contract");
-
-
-        uint256 units = msg.value / price;
-        uint256 realCost = units * price;
-        uint256 refund = msg.value - realCost;
-
-        require(
-            minted + units <= mintLimit,
-            "OL"
-        );
-        require(
-            units * amountPerUnits <= balanceOf(address(this)),
-            "NE"
-        );
-
-        super._transfer(address(this),msg.sender, units * amountPerUnits);
-
-
-        minted += units;
-
-        try dividendTracker.setBalance(payable(msg.sender), balanceOf(msg.sender)) {} catch {}
-
-        emit Minted(msg.sender, units * amountPerUnits, realCost);
-
-        if (refund > 0) {
-            payable(msg.sender).transfer(refund);
-            emit Refund(msg.sender, refund);
-        }
-    }
-
+    receive() external payable {}
 }
 
 interface DividendPayingTokenOptionalInterface {
@@ -1047,7 +1050,6 @@ abstract contract DividendPayingToken is
         _rewardToken = RewardToken;
     }
 
-    
     function distributeETHDividends(uint256 amount) public onlyOwner {
         require(totalSupply() > 0);
 
@@ -1077,7 +1079,10 @@ abstract contract DividendPayingToken is
                 _withdrawableDividend
             );
             emit DividendWithdrawn(user, _withdrawableDividend);
-            bool success = IERC20(_rewardToken).transfer(user, _withdrawableDividend);
+            bool success = IERC20(_rewardToken).transfer(
+                user,
+                _withdrawableDividend
+            );
 
             if (!success) {
                 withdrawnDividends[user] = withdrawnDividends[user].sub(
@@ -1091,8 +1096,6 @@ abstract contract DividendPayingToken is
 
         return 0;
     }
-
-
 
     function withdrawableDividendOf(
         address _owner
@@ -1116,23 +1119,6 @@ abstract contract DividendPayingToken is
                 .add(magnifiedDividendCorrections[_owner])
                 .toUint256Safe() / magnitude;
     }
-
-    // function _transfer(
-    //     address from,
-    //     address to,
-    //     uint256 value
-    // ) internal virtual override {
-    //     require(false);
-
-    //     int256 _magCorrection = magnifiedDividendPerShare
-    //         .mul(value)
-    //         .toInt256Safe();
-    //     magnifiedDividendCorrections[from] = magnifiedDividendCorrections[from]
-    //         .add(_magCorrection);
-    //     magnifiedDividendCorrections[to] = magnifiedDividendCorrections[to].sub(
-    //         _magCorrection
-    //     );
-    // }
 
     function _mint(address account, uint256 value) internal override {
         super._mint(account, value);
@@ -1163,7 +1149,7 @@ abstract contract DividendPayingToken is
     }
 }
 
-contract PandaTracker is Ownable, DividendPayingToken {
+contract Tracker is Ownable, DividendPayingToken {
     using SafeMath for uint256;
     using SafeMathInt for int256;
     using IterableMapping for IterableMapping.Map;
@@ -1175,7 +1161,6 @@ contract PandaTracker is Ownable, DividendPayingToken {
 
     mapping(address => uint256) public lastClaimTimes;
 
-    uint256 public claimWait = 600;
     uint256 public minimumTokenBalanceForDividends;
 
     event ExcludeFromDividends(address indexed account);
@@ -1190,21 +1175,13 @@ contract PandaTracker is Ownable, DividendPayingToken {
     constructor(
         uint256 mushHoldTokenAmount,
         address RewardToken
-    )
-        DividendPayingToken(
-            "PandaTracker",
-            "PandaTracker",
-            RewardToken
-        )
-    {
-
+    ) DividendPayingToken("Tracker", "Tracker", RewardToken) {
         minimumTokenBalanceForDividends = mushHoldTokenAmount; //must hold
     }
 
     function _transfer(address, address, uint256) internal pure override {
-        require(false, "PandaTracker: !allowed");
+        require(false, "N");
     }
-
 
     function excludeFromDividends(address account) external onlyOwner {
         require(!excludedFromDividends[account]);
@@ -1221,7 +1198,7 @@ contract PandaTracker is Ownable, DividendPayingToken {
             return false;
         }
 
-        return block.timestamp.sub(lastClaimTime) >= claimWait;
+        return block.timestamp.sub(lastClaimTime) >= 600;
     }
 
     function setBalance(
