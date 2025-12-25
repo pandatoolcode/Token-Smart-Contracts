@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
 
+pragma solidity ^0.8.24;
 
 contract Context {
-
     function _msgSender() internal view returns (address) {
         return payable(msg.sender);
     }
@@ -13,7 +12,6 @@ contract Context {
         return msg.data;
     }
 }
-
 
 library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -81,7 +79,6 @@ library SafeMath {
 
 library Address {
     function isContract(address account) internal view returns (bool) {
-
         bytes32 codehash;
         bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
@@ -105,10 +102,10 @@ library Address {
         );
     }
 
-    function functionCall(address target, bytes memory data)
-        internal
-        returns (bytes memory)
-    {
+    function functionCall(
+        address target,
+        bytes memory data
+    ) internal returns (bytes memory) {
         return functionCall(target, data, "Address: low-level call failed");
     }
 
@@ -172,17 +169,16 @@ library Address {
         }
     }
 }
-
 interface IERC20 {
-    function decimals() external view returns (uint256);
+    function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);
 
-    function name() external view returns (string memory);
+    function decimals() external view returns (uint256);
 
     function totalSupply() external view returns (uint256);
 
-    function balanceOf(address who) external view returns (uint);
+    function balanceOf(address account) external view returns (uint256);
 
     function transfer(
         address recipient,
@@ -194,11 +190,16 @@ interface IERC20 {
         address spender
     ) external view returns (uint256);
 
-    function approve(address _spender, uint _value) external;
+    function approve(address spender, uint256 amount) external returns (bool);
 
-    function transferFrom(address _from, address _to, uint _value) external ;
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
+
     event Approval(
         address indexed owner,
         address indexed spender,
@@ -206,8 +207,7 @@ interface IERC20 {
     );
 }
 
-
-contract PandaToken is Context, IERC20{
+contract PandaToken is Context, IERC20 {
     using SafeMath for uint256;
     using Address for address;
 
@@ -222,28 +222,26 @@ contract PandaToken is Context, IERC20{
         0x000000000000000000000000000000000000dEaD;
     uint256 private _totalSupply;
 
-    constructor( 
+    constructor(
         string[] memory stringParams,
         address[] memory addressParams,
         uint256[] memory numberParams,
         bool[] memory boolParams
     ) {
-        require(addressParams.length==0);
-        require(boolParams.length==0);
+        require(boolParams.length == 0);
 
-        address receiveAddr = tx.origin;
+        address ReceiveAddress = addressParams[0];
         _name = stringParams[0];
         _symbol = stringParams[1];
         _decimals = numberParams[0];
         _totalSupply = numberParams[1];
-        _balances[receiveAddr] = _totalSupply;
-        emit Transfer(address(0), receiveAddr, _totalSupply);
+        _balances[ReceiveAddress] = _totalSupply;
+        emit Transfer(address(0), ReceiveAddress, _totalSupply);
     }
 
     function name() public view override returns (string memory) {
         return _name;
     }
-
 
     function symbol() public view override returns (string memory) {
         return _symbol;
@@ -265,20 +263,17 @@ contract PandaToken is Context, IERC20{
         return _balances[account];
     }
 
-    function allowance(address owner1, address spender)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function allowance(
+        address owner1,
+        address spender
+    ) public view override returns (uint256) {
         return _allowances[owner1][spender];
     }
 
-    function increaseAllowance(address spender, uint256 addedValue)
-        public
-        virtual
-        returns (bool)
-    {
+    function increaseAllowance(
+        address spender,
+        uint256 addedValue
+    ) public virtual returns (bool) {
         _approve(
             _msgSender(),
             spender,
@@ -287,11 +282,10 @@ contract PandaToken is Context, IERC20{
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue)
-        public
-        virtual
-        returns (bool)
-    {
+    function decreaseAllowance(
+        address spender,
+        uint256 subtractedValue
+    ) public virtual returns (bool) {
         _approve(
             _msgSender(),
             spender,
@@ -303,20 +297,15 @@ contract PandaToken is Context, IERC20{
         return true;
     }
 
-    function approve(address spender, uint256 amount)
-        public
-        override
-        
-    {
-        _approve(_msgSender(), spender, amount);
-        
-    }
-
-    function _approve(
-        address owner1,
+    function approve(
         address spender,
         uint256 amount
-    ) private {
+    ) public override returns (bool) {
+        _approve(_msgSender(), spender, amount);
+        return true;
+    }
+
+    function _approve(address owner1, address spender, uint256 amount) private {
         require(owner1 != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -331,11 +320,10 @@ contract PandaToken is Context, IERC20{
     //to recieve ETH from uniswapV2Router when swaping
     receive() external payable {}
 
-    function transfer(address recipient, uint256 amount)
-        public
-        override
-        returns (bool)
-    {
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -344,7 +332,7 @@ contract PandaToken is Context, IERC20{
         address sender,
         address recipient,
         uint256 amount
-    ) public override  {
+    ) public override returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(
             sender,
@@ -354,7 +342,7 @@ contract PandaToken is Context, IERC20{
                 "ERC20: transfer amount exceeds allowance"
             )
         );
-        
+        return true;
     }
 
     function _transfer(
