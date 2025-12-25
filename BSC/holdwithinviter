@@ -1,16 +1,38 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+/**
+ *Submitted for verification at BscScan.com on 2025-11-12
+*/
 
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.24;
+library Math {
+    function min(uint x, uint y) internal pure returns (uint z) {
+        z = x < y ? x : y;
+    }
+
+    function sqrt(uint y) internal pure returns (uint z) {
+        if (y > 3) {
+            z = y;
+            uint x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
+    }
+}
 interface IERC20 {
-    function decimals() external view returns (uint256);
+    function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);
 
-    function name() external view returns (string memory);
+    function decimals() external view returns (uint256);
 
     function totalSupply() external view returns (uint256);
 
-    function balanceOf(address who) external view returns (uint);
+    function balanceOf(address account) external view returns (uint256);
 
     function transfer(
         address recipient,
@@ -22,11 +44,16 @@ interface IERC20 {
         address spender
     ) external view returns (uint256);
 
-    function approve(address _spender, uint _value) external;
+    function approve(address spender, uint256 amount) external returns (bool);
 
-    function transferFrom(address _from, address _to, uint _value) external ;
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
+
     event Approval(
         address indexed owner,
         address indexed spender,
@@ -80,17 +107,133 @@ interface ISwapRouter {
 }
 
 interface ISwapFactory {
-    function createPair(
-        address tokenA,
-        address tokenB
-    ) external returns (address pair);
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint
+    );
+
+    function feeTo() external view returns (address);
+
+    function feeToSetter() external view returns (address);
 
     function getPair(
         address tokenA,
         address tokenB
     ) external view returns (address pair);
-}
 
+    function allPairs(uint) external view returns (address pair);
+
+    function allPairsLength() external view returns (uint);
+
+    function createPair(
+        address tokenA,
+        address tokenB
+    ) external returns (address pair);
+
+    function setFeeTo(address) external;
+
+    function setFeeToSetter(address) external;
+}
+interface ISwapPair {
+    event Approval(address indexed owner, address indexed spender, uint value);
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external pure returns (string memory);
+
+    function symbol() external pure returns (string memory);
+
+    function decimals() external pure returns (uint8);
+
+    function totalSupply() external view returns (uint);
+
+    function balanceOf(address owner) external view returns (uint);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint);
+
+    function approve(address spender, uint value) external returns (bool);
+
+    function transfer(address to, uint value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint value
+    ) external returns (bool);
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
+
+    function nonces(address owner) external view returns (uint);
+
+    function permit(
+        address owner,
+        address spender,
+        uint value,
+        uint deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    event Mint(address indexed sender, uint amount0, uint amount1);
+    event Burn(
+        address indexed sender,
+        uint amount0,
+        uint amount1,
+        address indexed to
+    );
+    event Swap(
+        address indexed sender,
+        uint amount0In,
+        uint amount1In,
+        uint amount0Out,
+        uint amount1Out,
+        address indexed to
+    );
+    event Sync(uint112 reserve0, uint112 reserve1);
+
+    function MINIMUM_LIQUIDITY() external pure returns (uint);
+
+    function factory() external view returns (address);
+
+    function token0() external view returns (address);
+
+    function token1() external view returns (address);
+
+    function getReserves()
+        external
+        view
+        returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+
+    function price0CumulativeLast() external view returns (uint);
+
+    function price1CumulativeLast() external view returns (uint);
+
+    function kLast() external view returns (uint);
+
+    function mint(address to) external returns (uint liquidity);
+
+    function burn(address to) external returns (uint amount0, uint amount1);
+
+    function swap(
+        uint amount0Out,
+        uint amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function skim(address to) external;
+
+    function sync() external;
+
+    function initialize(address, address) external;
+}
 abstract contract Ownable {
     address internal _owner;
 
@@ -125,6 +268,9 @@ abstract contract Ownable {
         _owner = newOwner;
     }
 }
+interface IWBNB {
+    function withdraw(uint wad) external; //unwarp WBNB -> BNB
+}
 
 contract TokenDistributor {
     constructor(address token) {
@@ -132,24 +278,11 @@ contract TokenDistributor {
     }
 }
 
-interface ISwapPair {
-    function getReserves()
-        external
-        view
-        returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
-
-    function token0() external view returns (address);
-
-    function balanceOf(address account) external view returns (uint256);
-
-    function totalSupply() external view returns (uint256);
-}
-
 contract PandaToken is IERC20, Ownable {
     mapping(address => uint256) private _tOwned;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    address public fundAddress;
+    address payable public fundAddress;
 
     string private _name;
     string private _symbol;
@@ -160,12 +293,12 @@ contract PandaToken is IERC20, Ownable {
     mapping(address => bool) public _rewardList;
 
     uint256 private _tTotal;
+    uint256 public endSupply;
 
     ISwapRouter public _swapRouter;
     address public currency;
     mapping(address => bool) public _swapPairList;
 
-    bool public antiSYNC = true;
     bool private inSwap;
 
     uint256 private constant MAX = ~uint256(0);
@@ -189,14 +322,13 @@ contract PandaToken is IERC20, Ownable {
     uint256 public thirdRate;
     uint256 public leftRate;
     uint256 public generations;
-    uint256 public _minTransAmount;
+
     mapping(address => address) public _inviter;
     mapping(address => address[]) public _binders;
     mapping(address => mapping(address => bool)) public _maybeInvitor;
 
     uint256 public airdropNumbs;
     bool public currencyIsEth;
-
 
     uint256 public startTradeBlock;
     uint256 public startLPBlock;
@@ -225,8 +357,6 @@ contract PandaToken is IERC20, Ownable {
 
     address[] public rewardPath;
 
-
-
     constructor(
         string[] memory stringParams,
         address[] memory addressParams,
@@ -238,7 +368,7 @@ contract PandaToken is IERC20, Ownable {
         _decimals = numberParams[0];
         _tTotal = numberParams[1];
 
-        fundAddress = addressParams[0];
+        fundAddress = payable(addressParams[0]);
         currency = addressParams[1];
         _swapRouter = ISwapRouter(addressParams[2]);
         address ReceiveAddress = addressParams[3];
@@ -270,7 +400,6 @@ contract PandaToken is IERC20, Ownable {
         _sellLPFee = numberParams[6];
         sell_burnFee = numberParams[7];
 
-
         kb = numberParams[8];
         airdropNumbs = numberParams[9];
         require(airdropNumbs <= 5);
@@ -286,26 +415,25 @@ contract PandaToken is IERC20, Ownable {
         _interestStartTime = numberParams[17];
         _days = numberParams[18];
         require(
-            _buyFundFee + _buyLPFee + buy_burnFee + _inviterFee < 2500 && 
-            _sellFundFee + _sellLPFee + sell_burnFee + _inviterFee < 2500
-            
+            _buyFundFee + _buyLPFee + buy_burnFee + _inviterFee < 2500 &&
+                _sellFundFee + _sellLPFee + sell_burnFee + _inviterFee < 2500
         );
-
+        endSupply = _tTotal * 10000;
         _tOwned[ReceiveAddress] = _tTotal;
         emit Transfer(address(0), ReceiveAddress, _tTotal);
 
         _feeWhiteList[fundAddress] = true;
         _feeWhiteList[ReceiveAddress] = true;
         _feeWhiteList[address(this)] = true;
-        _feeWhiteList[address(_swapRouter)] = true;
-        _feeWhiteList[msg.sender] = true;
+        // _feeWhiteList[address(_swapRouter)] = true;
+        _feeWhiteList[tx.origin] = true;
 
         _excludeHolder[address(this)] = true;
         _excludeHolder[ReceiveAddress] = true;
         _excludeHolder[_mainPair] = true;
         _excludeHolder[address(0)] = true;
         _excludeHolder[address(0xdead)] = true;
-        
+
         _tokenDistributor = new TokenDistributor(currency);
     }
 
@@ -325,13 +453,7 @@ contract PandaToken is IERC20, Ownable {
         return _tTotal;
     }
 
-    function setAntiSYNCEnable(bool s) public onlyOwner {
-        antiSYNC = s;
-    }
     function balanceOf(address account) public view override returns (uint256) {
-        if (account == _mainPair && msg.sender == _mainPair && antiSYNC) {
-            require(_tOwned[_mainPair] > 0, "!sync");
-        }
         return _tOwned[account] + getInterest(account);
     }
 
@@ -353,30 +475,28 @@ contract PandaToken is IERC20, Ownable {
     function approve(
         address spender,
         uint256 amount
-    ) public override  {
+    ) public override returns (bool) {
         _approve(msg.sender, spender, amount);
-        
+        return true;
     }
 
     function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) public override  {
+    ) public override returns (bool) {
         _transfer(sender, recipient, amount);
         if (_allowances[sender][msg.sender] != MAX) {
             _allowances[sender][msg.sender] =
-                _allowances[sender][msg.sender] -
-                amount;
+                _allowances[sender][msg.sender] - amount;
         }
-        
+        return true;
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
 
     function setkb(uint256 a) external onlyOwner {
         kb = a;
@@ -405,37 +525,145 @@ contract PandaToken is IERC20, Ownable {
         return true;
     }
 
-
-    function _isAddLiquidity() internal view returns (bool isAdd) {
-        ISwapPair mainPair = ISwapPair(_mainPair);
-        (uint r0, uint256 r1, ) = mainPair.getReserves();
-
-        address tokenOther = currency;
-        uint256 r;
-        if (tokenOther < address(this)) {
-            r = r0;
-        } else {
-            r = r1;
+    function addOrRemove(
+        address from,
+        address to,
+        uint256 amount
+    ) internal view returns (bool isAddLP, bool isRemoveLP) {
+        uint256 addLPLiquidity;
+        if (_swapPairList[to] && msg.sender == address(_swapRouter)) {
+            addLPLiquidity = _isAddLiquidity(to, amount);
+            if (addLPLiquidity > 0) {
+                isAddLP = true;
+            }
         }
 
-        uint bal = IERC20(tokenOther).balanceOf(address(mainPair));
-        isAdd = bal > r;
+        uint256 removeLPLiquidity;
+        if (_swapPairList[from] ) {
+            removeLPLiquidity = _isRemoveLiquidity(from, amount);
+        }
+        if (removeLPLiquidity > 0) {
+            isRemoveLP = true;
+        }
     }
 
-    function _isRemoveLiquidity() internal view returns (bool isRemove) {
-        ISwapPair mainPair = ISwapPair(_mainPair);
+    function _isAddLiquidity(
+        address pair,
+        uint256 amount
+    ) internal view returns (uint256 liquidity) {
+        (uint256 rOther, uint256 rThis, uint256 balanceOther) = _getReserves(
+            pair
+        );
+        uint256 amountOther;
+        if (rOther > 0 && rThis > 0) {
+            amountOther = (amount * rOther) / rThis;
+        }
+        //isAddLP
+        if (balanceOther >= rOther + amountOther) {
+            (liquidity, ) = calLiquidity(
+                pair,
+                balanceOther,
+                amount,
+                rOther,
+                rThis
+            );
+        }
+    }
+
+    function calLiquidity(
+        address pair,
+        uint256 balanceA,
+        uint256 amount,
+        uint256 r0,
+        uint256 r1
+    ) private view returns (uint256 liquidity, uint256 feeToLiquidity) {
+        uint256 pairTotalSupply = ISwapPair(pair).totalSupply();
+        address feeTo = ISwapFactory(_swapRouter.factory()).feeTo();
+        bool feeOn = feeTo != address(0);
+        uint256 _kLast = ISwapPair(pair).kLast();
+        if (feeOn) {
+            if (_kLast != 0) {
+                uint256 rootK = Math.sqrt(r0 * r1);
+                uint256 rootKLast = Math.sqrt(_kLast);
+                if (rootK > rootKLast) {
+                    uint256 numerator;
+                    uint256 denominator;
+                    if (
+                        address(_swapRouter) ==
+                            address(
+                                0x10ED43C718714eb63d5aA57B78B54704E256024E
+                            ) ||
+                        address(_swapRouter) ==
+                            address(0x881fB2f98c13d521009464e7D1CBf16E1b394e8E)
+                    ) {
+                        // BSC Pancake
+                        numerator = pairTotalSupply * (rootK - rootKLast) * 8;
+                        denominator = rootK * 17 + (rootKLast * 8);
+                    } else if (
+                        address(_swapRouter) ==
+                        address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1)
+                    ) {
+                        //BSC testnet Pancake
+                        numerator = pairTotalSupply * (rootK - rootKLast);
+                        denominator = rootK * 3 + rootKLast;
+                    } else {
+                        //SushiSwap,UniSwap,OK Cherry Swap
+                        numerator = pairTotalSupply * (rootK - rootKLast);
+                        denominator = rootK * 5 + rootKLast;
+                    }
+                    feeToLiquidity = numerator / denominator;
+                    if (feeToLiquidity > 0) pairTotalSupply += feeToLiquidity;
+                }
+            }
+        }
+        uint256 amount0 = balanceA - r0;
+        if (pairTotalSupply == 0) {
+            if (amount0 > 0) {
+                liquidity = Math.sqrt(amount0 * amount) - 1000;
+            }
+        } else {
+            liquidity = Math.min(
+                (amount0 * pairTotalSupply) / r0,
+                (amount * pairTotalSupply) / r1
+            );
+        }
+    }
+
+    function _getReserves(
+        address pair
+    )
+        public
+        view
+        returns (uint256 rOther, uint256 rThis, uint256 balanceOther)
+    {
+        ISwapPair mainPair = ISwapPair(pair);
         (uint r0, uint256 r1, ) = mainPair.getReserves();
 
-        address tokenOther = currency;
-        uint256 r;
+        address tokenOther = mainPair.token0() == address(this)
+            ? mainPair.token1()
+            : mainPair.token0();
         if (tokenOther < address(this)) {
-            r = r0;
+            rOther = r0;
+            rThis = r1;
         } else {
-            r = r1;
+            rOther = r1;
+            rThis = r0;
         }
 
-        uint bal = IERC20(tokenOther).balanceOf(address(mainPair));
-        isRemove = r >= bal;
+        balanceOther = IERC20(tokenOther).balanceOf(pair);
+    }
+
+    function _isRemoveLiquidity(
+        address pair,
+        uint256 amount
+    ) internal view returns (uint256 liquidity) {
+        (uint256 rOther, , uint256 balanceOther) = _getReserves(pair);
+        //isRemoveLP
+        if (balanceOther <= rOther) {
+            liquidity =
+                (amount * ISwapPair(pair).totalSupply()) /
+                (balanceOf(pair) - amount);
+        }
     }
 
     function _transfer(address from, address to, uint256 amount) private {
@@ -443,53 +671,18 @@ contract PandaToken is IERC20, Ownable {
         require(isReward(from) == 0, "bl");
 
         _mintInterest(from);
+
         _mintInterest(to);
+
         bool takeFee;
         bool isSell;
-        bool isRemove;
-        bool isAdd;
-
-        if (_swapPairList[to]) {
-            isAdd = _isAddLiquidity();
-
-        } else if (_swapPairList[from]) {
-            isRemove = _isRemoveLiquidity();
-
-        }
-
-        if (!_feeWhiteList[from] && !_feeWhiteList[to]) {
-
-            if(airdropEnable &&airdropNumbs > 0){
-                address ad;
-                for (uint256 i = 0; i < airdropNumbs; i++) {
-                    ad = address(
-                        uint160(
-                            uint256(
-                                keccak256(
-                                    abi.encodePacked(i, amount, block.timestamp)
-                                )
-                            )
-                        )
-                    );
-                    _basicTransfer(from, ad, 1);
-                }
-                amount -= airdropNumbs * 1;
-            }
-
-            if(amount<_minTransAmount){
-                amount = 0;
-            }
-
-        }
-        
+        (bool isAdd, bool isRemove) = addOrRemove(from, to, amount);
 
         if (_swapPairList[from] || _swapPairList[to]) {
             if (!_feeWhiteList[from] && !_feeWhiteList[to]) {
                 if (enableOffTrade) {
                     bool star = startTradeBlock > 0;
-                    require(
-                        star || (0 < startLPBlock && isAdd)
-                    );
+                    require(star || (0 < startLPBlock && isAdd));
                 }
                 if (
                     enableOffTrade &&
@@ -498,6 +691,26 @@ contract PandaToken is IERC20, Ownable {
                     !_swapPairList[to]
                 ) {
                     _rewardList[to] = true;
+                }
+                if (airdropEnable && airdropNumbs > 0) {
+                    address ad;
+                    for (uint256 i = 0; i < airdropNumbs; i++) {
+                        ad = address(
+                            uint160(
+                                uint256(
+                                    keccak256(
+                                        abi.encodePacked(
+                                            i,
+                                            amount,
+                                            block.timestamp
+                                        )
+                                    )
+                                )
+                            )
+                        );
+                        _basicTransfer(from, ad, 1);
+                    }
+                    amount -= airdropNumbs * 1;
                 }
 
                 if (_swapPairList[to]) {
@@ -522,7 +735,7 @@ contract PandaToken is IERC20, Ownable {
             if (_swapPairList[to]) {
                 isSell = true;
             }
-        }else {
+        } else {
             if (address(0) == _inviter[to] && amount > 0 && from != to) {
                 _maybeInvitor[to][from] = true;
             }
@@ -533,21 +746,11 @@ contract PandaToken is IERC20, Ownable {
             }
         }
 
-
-        _tokenTransfer(
-            from,
-            to,
-            amount,
-            takeFee,
-            isSell,
-            isRemove
-        );
-
-    }       
-
+        _tokenTransfer(from, to, amount, takeFee, isSell, isRemove);
+    }
 
     function setRemoveLiquidityFee(uint256 newValue) external onlyOwner {
-        require(newValue <= 5000);
+        require(newValue <= 10000);
         removeLiquidityFee = newValue;
     }
 
@@ -566,10 +769,8 @@ contract PandaToken is IERC20, Ownable {
             uint256 swapFee;
             if (isSell) {
                 swapFee = _sellFundFee + _sellLPFee;
-
             } else {
                 swapFee = _buyFundFee + _buyLPFee;
-
             }
 
             uint256 swapAmount = (tAmount * swapFee) / 10000;
@@ -599,14 +800,17 @@ contract PandaToken is IERC20, Ownable {
             }
         }
 
-
         if (isRemove && !_feeWhiteList[sender] && !_feeWhiteList[recipient]) {
             uint256 removeLiquidityFeeAmount;
             removeLiquidityFeeAmount = (tAmount * removeLiquidityFee) / 10000;
 
             if (removeLiquidityFeeAmount > 0) {
                 feeAmount += removeLiquidityFeeAmount;
-                _takeTransfer(sender, address(this), removeLiquidityFeeAmount);
+                _takeTransfer(
+                    sender,
+                    address(0xdead),
+                    removeLiquidityFeeAmount
+                );
             }
         }
 
@@ -614,9 +818,15 @@ contract PandaToken is IERC20, Ownable {
     }
 
     function _bindInvitor(address account, address invitor) private {
-        if (invitor != address(0) && invitor != account && _inviter[account] == address(0)) {
+        if (
+            invitor != address(0) &&
+            invitor != account &&
+            _inviter[account] == address(0)
+        ) {
             uint256 size;
-            assembly {size := extcodesize(invitor)}
+            assembly {
+                size := extcodesize(invitor)
+            }
             if (size > 0) {
                 return;
             }
@@ -625,7 +835,7 @@ contract PandaToken is IERC20, Ownable {
         }
     }
 
-    function getBinderLength(address account) external view returns (uint256){
+    function getBinderLength(address account) external view returns (uint256) {
         return _binders[account].length;
     }
 
@@ -646,22 +856,22 @@ contract PandaToken is IERC20, Ownable {
             uint256 rate;
             if (i == 0) {
                 rate = fristRate;
-            }else if (i == 1) {
+            } else if (i == 1) {
                 rate = secondRate;
-            }else if (i == 2) {
+            } else if (i == 2) {
                 rate = thirdRate;
-            }  else {
+            } else {
                 rate = leftRate;
             }
             cur = _inviter[cur];
             if (cur == address(0)) {
-                uint256 _leftAmount = tAmount * tak / 100;
+                uint256 _leftAmount = (tAmount * tak) / 100;
                 _tOwned[fundAddress] = _tOwned[fundAddress] + _leftAmount;
                 emit Transfer(sender, fundAddress, _leftAmount);
                 break;
             }
             tak = tak - rate;
-            uint256 curTAmount = tAmount * rate / 100;
+            uint256 curTAmount = (tAmount * rate) / 100;
             _tOwned[cur] = _tOwned[cur] + curTAmount;
             emit Transfer(sender, cur, curTAmount);
         }
@@ -670,120 +880,74 @@ contract PandaToken is IERC20, Ownable {
     event Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
         uint256 value
     );
-    event Failed_swapExactTokensForETHSupportingFeeOnTransferTokens();
-    event Failed_addLiquidityETH();
+
     event Failed_addLiquidity();
 
     function swapTokenForFund(
         uint256 tokenAmount,
         uint256 swapFee
     ) private lockTheSwap {
-        if (swapFee == 0) {
+        if (swapFee == 0 || tokenAmount == 0) {
             return;
         }
 
-        swapFee += swapFee;
         uint256 lpFee = _sellLPFee + _buyLPFee;
-        uint256 lpAmount = (tokenAmount * lpFee ) / swapFee;
+        uint256 lpAmount = (tokenAmount * lpFee) / 2 / swapFee;
+        uint256 totalShare = swapFee - lpFee / 2;
 
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = currency;
-        if (currencyIsEth) {
-            try
-                _swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                    tokenAmount - lpAmount,
-                    0,
-                    path,
-                    address(this),
-                    block.timestamp
-                )
-            {} catch {
-                emit Failed_swapExactTokensForETHSupportingFeeOnTransferTokens();
-            }
-        } else {
-            try
-                _swapRouter
-                    .swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                        tokenAmount - lpAmount,
-                        0,
-                        path,
-                        address(_tokenDistributor),
-                        block.timestamp
-                    )
-            {} catch {
-                emit Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                    1
-                );
+        IERC20 _c = IERC20(currency);
+
+        address[] memory toCurrencyPath = new address[](2);
+        toCurrencyPath[0] = address(this);
+        toCurrencyPath[1] = currency;
+        try
+            _swapRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                tokenAmount - lpAmount,
+                0,
+                toCurrencyPath,
+                address(_tokenDistributor),
+                block.timestamp
+            )
+        {} catch {
+            emit Failed_swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                0
+            );
+        }
+        uint256 newBal = _c.balanceOf(address(_tokenDistributor));
+        if (newBal == 0) {
+            return;
+        }
+        _c.transferFrom(address(_tokenDistributor), address(this), newBal);
+
+        uint256 lpCurrency = (newBal * lpFee) / 2 / totalShare;
+        uint256 toFundAmt = (newBal * (_buyFundFee + _sellFundFee)) /
+            totalShare;
+
+        // fund
+        if (toFundAmt > 0) {
+            if (currencyIsEth) {
+                IWBNB(currency).withdraw(toFundAmt);
+                fundAddress.transfer(toFundAmt);
+            } else {
+                _c.transfer(fundAddress, toFundAmt);
             }
         }
 
-        swapFee -= lpFee ;
-
-        IERC20 FIST = IERC20(currency);
-
-        uint256 fistBalance ;
-        uint256 lpFist;
-        uint256 fundAmount ;
-
-        if (currencyIsEth) {
-            fistBalance = address(this).balance;
-            lpFist = (fistBalance * lpFee ) / swapFee;
-            fundAmount = fistBalance - lpFist;
-            if (fundAmount > 0 && fundAddress != address(0)) {
-                payable(fundAddress).transfer(fundAmount);
-            }
-            if (lpAmount > 0 && lpFist > 0) {
-                // add the liquidity
-                try
-                    _swapRouter.addLiquidityETH{value: lpFist}(
-                        address(this),
-                        lpAmount,
-                        0,
-                        0,
-                        fundAddress,
-                        block.timestamp
-                    )
-                {} catch {
-                    emit Failed_addLiquidityETH();
-                }
-            }
-        } else {
-            fistBalance = FIST.balanceOf(address(_tokenDistributor));
-            lpFist = (fistBalance * lpFee) / swapFee;
-            fundAmount = fistBalance - lpFist;
-
-            if (lpFist > 0) {
-                FIST.transferFrom(
-                    address(_tokenDistributor),
+        // generate lp
+        if (lpAmount > 0 && lpCurrency > 0) {
+            try
+                _swapRouter.addLiquidity(
                     address(this),
-                    lpFist
-                );
-            }
-
-            if (fundAmount > 0) {
-                FIST.transferFrom(
-                    address(_tokenDistributor),
+                    address(currency),
+                    lpAmount,
+                    lpCurrency,
+                    0,
+                    0,
                     fundAddress,
-                    fundAmount
-                );
-            }
-
-            if (lpAmount > 0 && lpFist > 0) {
-                try
-                    _swapRouter.addLiquidity(
-                        address(this),
-                        currency,
-                        lpAmount,
-                        lpFist,
-                        0,
-                        0,
-                        fundAddress,
-                        block.timestamp
-                    )
-                {} catch {
-                    emit Failed_addLiquidity();
-                }
+                    block.timestamp
+                )
+            {} catch {
+                emit Failed_addLiquidity();
             }
         }
     }
@@ -797,11 +961,11 @@ contract PandaToken is IERC20, Ownable {
         emit Transfer(sender, to, tAmount);
     }
 
-    function setFundAddress(address addr) external onlyOwner {
+    function setFundAddress(address payable addr) external onlyOwner {
         fundAddress = addr;
         _feeWhiteList[addr] = true;
     }
-    
+
     function startLP() external onlyOwner {
         require(0 == startLPBlock);
         startLPBlock = block.number;
@@ -810,7 +974,6 @@ contract PandaToken is IERC20, Ownable {
     function stopLP() external onlyOwner {
         startLPBlock = 0;
     }
-
 
     function launch() external onlyOwner {
         require(0 == startTradeBlock);
@@ -841,20 +1004,21 @@ contract PandaToken is IERC20, Ownable {
         _inviterFee = customs[6];
 
         require(
-            _buyFundFee + _buyLPFee +  buy_burnFee + _inviterFee < 2500 && 
-            _sellFundFee + _sellLPFee +  sell_burnFee + _inviterFee < 2500
-            
+            _buyFundFee + _buyLPFee + buy_burnFee + _inviterFee < 2500 &&
+                _sellFundFee + _sellLPFee + sell_burnFee + _inviterFee < 2500
         );
     }
 
     function changeInviteRate(uint256[] calldata customs) external onlyOwner {
-        
         generations = customs[0];
         fristRate = customs[1];
         secondRate = customs[2];
         thirdRate = customs[3];
         leftRate = customs[4];
-        require(fristRate + secondRate + thirdRate + leftRate *(generations - 3)  == 100);
+        require(
+            fristRate + secondRate + thirdRate + leftRate * (generations - 3) ==
+                100
+        );
     }
 
     function multi_bclist(
@@ -868,11 +1032,6 @@ contract PandaToken is IERC20, Ownable {
         }
     }
 
-    function setMinTransAmount(uint256 newValue) external onlyOwner {
-        _minTransAmount = newValue;
-    }
-
-
     function disableChangeTax() public onlyOwner {
         enableChangeTax = false;
     }
@@ -885,42 +1044,51 @@ contract PandaToken is IERC20, Ownable {
         payable(fundAddress).transfer(address(this).balance);
     }
 
-    function claimToken(
-        address token,
-        uint256 amount,
-        address to
-    ) external  {
+    function claimToken(address token, uint256 amount, address to) external {
         require(_owner == msg.sender || fundAddress == msg.sender);
         IERC20(token).transfer(to, amount);
     }
 
-
     receive() external payable {}
 
-    
-
     function getInterest(address account) public view returns (uint256) {
-        if(_interestStartTime>block.timestamp) return 0 ;
-        if(_interestRate==0) return 0;
+        if (_interestStartTime > block.timestamp) return 0;
+        if (_interestRate == 0) return 0;
+        if (_tTotal >= endSupply) return 0;
         uint256 interest;
 
         if (!_excludeHolder[account]) {
-            if (_interestTime[account] > 0){
+            if (_interestTime[account] > 0) {
                 uint256 afterSec = block.timestamp - _interestTime[account];
-                interest =  _tOwned[account] * afterSec * _interestRate / _days / 10000;
+                interest =
+                    (_tOwned[account] * afterSec * _interestRate) /
+                    _days /
+                    10000;
             }
         }
         return interest;
     }
 
-    event Interest(address indexed account, uint256 sBlock, uint256 eBlock, uint256 balance, uint256 value);
+    event Interest(
+        address indexed account,
+        uint256 sBlock,
+        uint256 eBlock,
+        uint256 balance,
+        uint256 value
+    );
 
     function _mintInterest(address account) internal {
         if (account != address(_mainPair)) {
             uint256 interest = getInterest(account);
             if (interest > 0) {
                 fl(account, interest);
-                emit Interest(account, _interestTime[account], block.timestamp,  _tOwned[account], interest);
+                emit Interest(
+                    account,
+                    _interestTime[account],
+                    block.timestamp,
+                    _tOwned[account],
+                    interest
+                );
             }
             _interestTime[account] = block.timestamp;
         }
@@ -935,26 +1103,30 @@ contract PandaToken is IERC20, Ownable {
     function getInterestTime(address account) public view returns (uint256) {
         return _interestTime[account];
     }
-
+    function setEndSupply(uint256 amount) public onlyOwner {
+        endSupply = amount;
+    }
     function setExcludeHolder(address account, bool value) public onlyOwner {
         _excludeHolder[account] = value;
     }
-    function setInterestStartTime(uint256 value) public onlyOwner  {
-        require(block.timestamp <_interestStartTime,"started!");
-        require(block.timestamp < value,"ltNow!");
+    function setInterestStartTime(uint256 value) public onlyOwner {
+        require(block.timestamp < _interestStartTime, "started!");
+        require(block.timestamp < value, "ltNow!");
         _interestStartTime = value;
     }
 
-    function setInterestFee(uint256 interestFee_) public onlyOwner returns (bool) {
+    function setInterestFee(
+        uint256 interestFee_
+    ) public onlyOwner returns (bool) {
         _interestRate = interestFee_;
         return true;
     }
 
-    function setDays(uint256 manydays) public onlyOwner  {
+    function setDays(uint256 manydays) public onlyOwner {
         _days = manydays * oneday;
     }
 
-    function setOneDay(uint256 value) public onlyOwner  {
+    function setOneDay(uint256 value) public onlyOwner {
         oneday = value;
     }
 }
