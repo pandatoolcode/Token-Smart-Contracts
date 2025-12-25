@@ -1,3 +1,7 @@
+// 该合约代码由全网最强一键发币平台PandaTool免费分享，官网：https://pandatool.org/
+
+// 该合约名为：持币分红本币，即持有某种代币即可分红本币、交易销毁等功能，无权限、合约比较干净，具体教程：https://help.pandatool.org/createtoken/holdreflection
+
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.24;
